@@ -7,6 +7,8 @@ from itertools import zip_longest
 from Lily.ctao2.ctao2_database_alias import manidb, alias, tickwatch
 from multiprocessing import Pool
 
+from osgeo import ogr
+
 #%% text conversion
 CT2_HTAB_SECT_NUM = str.maketrans (
     {
@@ -197,27 +199,21 @@ CT2_HTAB_SYMBOL = str.maketrans(
     '‵' :'"'
     })
 
-
-#%% read csv
-def fun4cntycode(arg):
-    res1     = {}
-    arg0     = arg[0]
-    arg1     = arg[1]
-    if arg1 == arg0:
-        res1['reCntycode'] = 1
-    else:
-        res1['reCntycode'] = 0
+def fun4checkgeo(arg):
+    res1     = {'checkgeo' : 0}
+    try:
+        bnd     = ogr.CreateGeometryFromWkt(arg[0])
+        poi     = ogr.CreateGeometryFromWkt(arg[1])
+        res1['checkgeo'] = poi.Within(bnd)  
+    except:
+        res1['checkgeo'] = 3
     return res1
+
+def fun4cntycode(arg):
+    return {'reCntycode' : (arg[1] == arg[0]) }
 
 def fun4towncode(arg):
-    res1     = {}
-    arg0     = arg[0]
-    arg1     = arg[1]
-    if arg1[:5] == arg0:       
-        res1['reTowncode'] = 1
-    else:
-        res1['reTowncode'] = 0
-    return res1
+    return {'reTowncode' : (arg[1][:5] == arg[0]) }
 
 def fun4number(arg):
     res1     = {}
@@ -243,27 +239,44 @@ def fun4number(arg):
     #step 5 NUMd  = r'^[臨]{0,1}[0-9]{1,4}[\-0-9]{0,5}$'
  
     NUMd  = r'^([臨東建附特()]{0,3})([0-9]{1,4})([衖]{1}[0-9A-Z]{0,6}){0,3}([\-]{1}[0-9A-Z甲乙丙丁]{0,6}){0,3}$'
-    
-    # ^([地下]{0,2}([0-9]{0,4}[樓層]{1})){0,7}([\-]{1}[0-9A-ZＡ-Ｚ]{0,3})$
+
     FLOORd = r'^([地下底室\-]{0,4}([0-9A-Z,]{0,4}[樓層]{1}[0-9A-Z,\-]{0,7}){0,4}){0,10}([\-]{0,1}[0-9A-Z]{0,3}){0,7}$'
 
     repattern       = re.compile(NUMd)
     match           = re.match(repattern, res1['NUMBER'] ) 
     
     if match:
-        res1['reNUM'] = 1 
+        res1['reNumber'] = 1
     else:
-        res1['reNUM'] = 0
+        res1['reNumber'] = 0
 
     repattern      = re.compile(FLOORd)
     match          = re.match(repattern, res1['FLOOR'] )
   
     if match:
-        res1['reFLOOR'] = 1
+        res1['reFloor'] = 1
     else:
-        res1['reFLOOR'] = 0 
+        res1['reFloor'] = 0 
 
     return res1
+
+def lookup_value(arg1, arg2, arg3):
+    list0 = []; dic = {}
+    list_town_code = arg1[arg2].tolist()
+    list_point_geo = arg1['point_wkt'].tolist()
+
+    df = arg3.set_index(arg2)
+    for town_code in list_town_code:
+        town_wkt = 0
+        if town_code in df.index:
+            town_wkt = df.loc[town_code, 'town_wkt']
+        else:
+            town_wkt = ''
+        list0.append(town_wkt)
+
+    dic['town_wkt'] = list0
+    df = pd.DataFrame.from_dict(dic, orient = 'columns')
+    return df
 
 #df0 , source df
 def check_addr_column(cnty_source_name, cnty_source_df, col_name , fun_obj):
@@ -285,44 +298,118 @@ def check_addr_column(cnty_source_name, cnty_source_df, col_name , fun_obj):
     mpool.close()
     return cnty_source_df
 
-if __name__ == '__console__' or __name__ == '__main__':
+def trans_column(df):
+    sdf = df0[['fid', 'cnty_code', 'town_code', 'lie', 'lin', 'road', 'zone', 'lane', 'alley', 'num']]
+    df.insert(0, 'origin_address', sdf.apply( lambda a : str(a.to_list()),  axis =1 ) ) 
+
+    cdf = df0[['check_town_geo', 'reCntycode', 'reTowncode', 'reNumber', 'reFloor']]
+    df['checklist'] = cdf.apply( lambda a : a.to_csv(),  axis =1 ) 
+
+    return df
+
+#df['col_3'] = df.apply(lambda x: f(x.col_1, x.col_2), axis=1)
+
+def function_x():
+
     cputime = tickwatch()
+    from osgeo import ogr
 
     mydb = manidb('G:/NCREE_GIS/2020_address/TGOS_NLSC_TWN22.sqlite')
     cnty = mydb.get_alias('metadata_nsg_cnty').read()
-    #for key, row in cnty.iterrows():
-        #cntynum = row['ncity']
-        #target = 'A' + cntynum
- 
-    for cntynum in ['66000']:
-        target = 'A' + cntynum
+    town = mydb.get_alias('metadata_nsg_town').read()
+
+    for key, row in cnty[ cnty['ncity'] =='10008' ].iterrows() :
+
+        cntynum  = row['ncity']
+        cnty_wkt = row['cnty_wkt']
+
+        target   = 'A' + cntynum
         
         #resource
-        tab0 = mydb.get_alias(target)
+        tab0     = mydb.get_alias(target)
         #outcome
-        tab1 = mydb.get_alias(target + '_TRAN' )
-        tab2 = mydb.get_alias(target + '_TRAN_out' )
+        tab1     = mydb.get_alias(target + '_TRAN' )
 
-        df0  = tab0.read()
-    
+
+        df0      = tab0.read()
+        df0['point_wkt'] = df0[['TWD97_X', 'TWD97_Y']].astype(str).apply(lambda x: ' '.join(x), axis=1)
+        df0['point_wkt'] = df0['point_wkt'].apply (lambda x : f'POINT({x})')
         if df0.empty :
             continue
-
-        cputime.tick()
         
-        df0 = check_addr_column(cntynum, df0, 'cnty_code', fun4cntycode)
-        #df0 = check_addr_column(cntynum, df0, 'town_code', fun4towncode)
-        #df0 = check_addr_column(cntynum, df0, 'num', fun4number)
-        cputime.tick('calculation accomplished')
-        tab1.write(df0)
+        cputime.tick()
+        #check county boundary
+        df0     = check_addr_column(cnty_wkt, df0, 'point_wkt', fun4checkgeo)
+        
+        # check town boundary
 
-        # export the outlier
-        df1 = df0[df0['reCntycode']==0]
-        df2 = df0[df0['reTowncode']==0]
-        df3 = df0[df0['reNUM']     ==0]
-        frames = [df1, df2, df3]
+        town_wkt        = lookup_value(df0, 'town_code', town)
+        ziparg          = zip(town_wkt['town_wkt'].tolist(), df0['point_wkt'].tolist())
 
-        result = pd.concat(frames)
-        tab2.write(result)
+        #-----------------------------------------
+        with Pool(8) as mpool :             
+            check_town = mpool.map(fun4checkgeo, ziparg)
 
-        cputime.tick('write down dataframe' + target)
+        #-----------------------------------------
+        #debug 
+        #check_town = []
+        #for arg in ziparg:
+        #    check_town.append(fun4checkgeo(arg))        
+        #------------------------------------
+        df_check_town   = pd.DataFrame.from_dict(check_town, orient = 'columns')
+        df0['check_town_geo'] = df_check_town['checkgeo']
+
+
+        cputime.tick('Geometry checked')
+        
+        #check county code
+        df0     = check_addr_column(cntynum,  df0, 'cnty_code', fun4cntycode)
+        # check town code
+        df0     = check_addr_column(cntynum,  df0, 'town_code', fun4towncode)
+        # check number
+        df0     = check_addr_column(cntynum,  df0, 'num', fun4number)
+        
+
+
+def output_error():
+    cputime = tickwatch()
+
+    target = 'A10008_TRAN'
+
+    mydb = manidb('G:/NCREE_GIS/2020_address/TGOS_NLSC_TWN22.sqlite')
+
+    df0     = mydb.get_alias(target).read()
+
+    cputime.tick('Calculation accomplished')
+
+    ## export the outlier
+    df1    = df0[df0['check_town_geo']==0]
+    df2    = df0[df0['reCntycode']    ==0]
+    df3    = df0[df0['reTowncode']    ==0]
+    df4    = df0[df0['reNumber']      ==0]
+    frames = [df1, df2, df3, df4]
+
+    result = pd.concat(frames)
+    mydb.get_alias(target + '_out' ).write(result)
+    cputime.tick('Write down dataframe' + target)
+
+if __name__ == '__console__' or __name__ == '__main__':
+    target = 'A10008_TRAN'
+    modify = 'A10008_TRAN_modify'
+
+    mydb = manidb('G:/NCREE_GIS/2020_address/TGOS_NLSC_TWN22.sqlite')
+
+    df0     = mydb.get_alias(target).read()
+    df1     = mydb.get_alias(modify).read()
+
+    df0 = df0.set_index(['fid'])
+    df1 = df1.set_index(['fid'])
+
+#    df_x = df0.loc[df1.index,:]
+
+    df0.loc[df1.index, :] = df1[:]
+
+#    df_y = df0.loc[df1.index, :]
+    sdf = df0[['origin_address',  'cnty_code', 'town_code', 'lie', 'lin', 'road', 'zone', 'lane', 'alley', 'NUMBER', 'FLOOR']]
+
+    mydb.get_alias(target + '_yeh' ).write_with_index(sdf)
