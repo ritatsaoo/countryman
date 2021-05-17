@@ -2,14 +2,17 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>bd86d1be-1999-4263-855c-776bfbd93d0d</ProjectGuid>
+    <ProjectGuid>517f27d1-0372-4f6e-b408-35cf93a73c1f</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>ax_htax_decomposition_20210419.py</StartupFile>
-    <SearchPath>..\..\pylily_py_release</SearchPath>
+    <StartupFile>PythonApplication1.py</StartupFile>
+    <SearchPath>
+    </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
-    <Name>countryman</Name>
-    <RootNamespace>countryman</RootNamespace>
+    <Name>PythonApplication1</Name>
+    <RootNamespace>PythonApplication1</RootNamespace>
+    <IsWindowsApplication>False</IsWindowsApplication>
+    <InterpreterId>Global|PythonCore|3.6</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -20,24 +23,10 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="address_dc_table_break_20201104.py" />
-    <Compile Include="address_dc_table_break_20210203.py" />
-    <Compile Include="address_dc_table_break_runv1.py" />
-    <Compile Include="address_dc_table_break_runv2.py" />
-    <Compile Include="address_matching_20210428.py" />
-    <Compile Include="ax_geo_unitext_c.py" />
-    <Compile Include="ax_htax_decomposition.py" />
-    <Compile Include="ax_htax_decomposition_20210419.py" />
-    <Compile Include="countryman_20210310.py" />
-    <Compile Include="address_dc_table_break_20210311.py" />
-    <Compile Include="address_dc_table_break_20210316.py" />
-    <Compile Include="address_api.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="m3_pg.to.pickle.py" />
-    <Compile Include="process.py">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="PythonApplication1.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|PythonCore|3.6" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

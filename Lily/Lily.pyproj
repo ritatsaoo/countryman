@@ -1,0 +1,61 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>191ad17e-08a6-43b2-9332-ddf966043e88</ProjectGuid>
+    <ProjectHome>.</ProjectHome>
+    <StartupFile>ctao2\ctao2_hostmetadata.py</StartupFile>
+    <SearchPath>
+    </SearchPath>
+    <WorkingDirectory>g:\pylily_factory\</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <Name>Lily</Name>
+    <RootNamespace>Lily</RootNamespace>
+    <IsWindowsApplication>False</IsWindowsApplication>
+    <InterpreterId>Global|VisualStudio|osgeo4w64</InterpreterId>
+    <PublishUrl>g:\pylily_factory\v2017_Lily_release</PublishUrl>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <CommandLineArguments>m:\pylily_factory</CommandLineArguments>
+    <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="ctao2\ctao2_database_alias.py" />
+    <Compile Include="ctao2\ctao2_database_dialogue.py" />
+    <Compile Include="ctao2\ctao2_release.py" />
+    <Compile Include="ctao2\ctao2_digraph.py" />
+    <Compile Include="ctao2\ctao2_database_mediator.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ctao2\ctao2_urlstring.py" />
+    <Compile Include="ctao2\ctao2_filefeature.py" />
+    <Compile Include="ctao2\ctao2_database_sunday.py" />
+    <Compile Include="ctao2\ctao2_database.py" />
+    <Compile Include="ctao2\ctao2_hostmetadata.py" />
+    <Compile Include="ctao2\ctao2_nsgstring.py" />
+    <Compile Include="ctao2\__init__.py" />
+    <Compile Include="__init__.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="ctao2\" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|VisualStudio|osgeo4w64" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+  <!-- Uncomment the CoreCompile target to enable the Build command in
+       Visual Studio and specify your pre- and post-build commands in
+       the BeforeBuild and AfterBuild targets below. -->
+  <!--<Target Name="CoreCompile" />-->
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+</Project>

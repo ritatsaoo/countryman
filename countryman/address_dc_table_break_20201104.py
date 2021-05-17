@@ -219,18 +219,18 @@ def fun4number(arg):
     res1     = {}
     arg = arg[1]
     if arg is None:
-        res1['NUMBER'] = ''
-        res1['FLOOR']  = ''
+        res1['number'] = ''
+        res1['floor']  = ''
         return res1
 
     ans1 = arg.split('號')
     
     if len(ans1) == 2:
-        res1['NUMBER'] = ans1[0].translate(CT2_HTAB_NUM).translate(CT2_HTAB_SYMBOL)
-        res1['FLOOR']  = ans1[1].translate(CT2_HTAB_NUM).translate(CT2_HTAB_SYMBOL)
+        res1['number'] = ans1[0].translate(CT2_HTAB_NUM).translate(CT2_HTAB_SYMBOL)
+        res1['floor']  = ans1[1].translate(CT2_HTAB_NUM).translate(CT2_HTAB_SYMBOL)
     else:
-        res1['NUMBER'] = ans1[0].translate(CT2_HTAB_NUM).translate(CT2_HTAB_SYMBOL)
-        res1['FLOOR']  = ''
+        res1['number'] = ans1[0].translate(CT2_HTAB_NUM).translate(CT2_HTAB_SYMBOL)
+        res1['floor']  = ''
 
     #step 1 NUMd  = r'[0123456789]{1,4}'
     #step 2 NUMd  = r'[臨]{0,1}[0123456789]{1,4}'
@@ -243,7 +243,7 @@ def fun4number(arg):
     FLOORd = r'^([地下底室\-]{0,4}([0-9A-Z,]{0,4}[樓層]{1}[0-9A-Z,\-]{0,7}){0,4}){0,10}([\-]{0,1}[0-9A-Z]{0,3}){0,7}$'
 
     repattern       = re.compile(NUMd)
-    match           = re.match(repattern, res1['NUMBER'] ) 
+    match           = re.match(repattern, res1['number'] ) 
     
     if match:
         res1['reNumber'] = 1
@@ -251,7 +251,7 @@ def fun4number(arg):
         res1['reNumber'] = 0
 
     repattern      = re.compile(FLOORd)
-    match          = re.match(repattern, res1['FLOOR'] )
+    match          = re.match(repattern, res1['floor'] )
   
     if match:
         res1['reFloor'] = 1
@@ -298,7 +298,7 @@ def check_addr_column(cnty_source_name, cnty_source_df, col_name , fun_obj):
     mpool.close()
     return cnty_source_df
 
-def trans_column(df):
+def trans_column(df0):
     sdf = df0[['fid', 'cnty_code', 'town_code', 'lie', 'lin', 'road', 'zone', 'lane', 'alley', 'num']]
     df.insert(0, 'origin_address', sdf.apply( lambda a : str(a.to_list()),  axis =1 ) ) 
 
@@ -307,7 +307,6 @@ def trans_column(df):
 
     return df
 
-#df['col_3'] = df.apply(lambda x: f(x.col_1, x.col_2), axis=1)
 
 def function_x():
 
@@ -368,8 +367,9 @@ def function_x():
         df0     = check_addr_column(cntynum,  df0, 'town_code', fun4towncode)
         # check number
         df0     = check_addr_column(cntynum,  df0, 'num', fun4number)
-        
+        df0     = trans_column(df0)
 
+    mydb.get_alias(target + '_TRAN' ).write(df0)
 
 def output_error():
     cputime = tickwatch()
@@ -410,6 +410,6 @@ if __name__ == '__console__' or __name__ == '__main__':
     df0.loc[df1.index, :] = df1[:]
 
 #    df_y = df0.loc[df1.index, :]
-    sdf = df0[['origin_address',  'cnty_code', 'town_code', 'lie', 'lin', 'road', 'zone', 'lane', 'alley', 'NUMBER', 'FLOOR']]
+    sdf = df0[['origin_address',  'cnty_code', 'town_code', 'lie', 'lin', 'road', 'zone', 'lane', 'alley', 'number', 'floor']]
 
     mydb.get_alias(target + '_yeh' ).write_with_index(sdf)
