@@ -595,7 +595,7 @@ if __name__ == '__console__' or __name__ == '__main__':
     #%%---------target-------------
     
     workdir                     = 'G:/NCREE_GIS/'
-    target_tab                  = '92000'
+    target_tab                  = '64000'
     country                     = 'yilan'
     
     db                          = manidb( workdir + 'htax/nsg_bldg_3826.sqlite' )
